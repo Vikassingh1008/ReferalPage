@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "referral-page-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/referralPage/ReferralPageWebPart.js",
+          "manifest": "./src/webparts/referralPage/ReferralPageWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "ReferralPageWebPartStrings": "lib/webparts/referralPage/loc/{locale}.js"
+  }
+}

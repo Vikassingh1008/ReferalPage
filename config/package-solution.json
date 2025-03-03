@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "referral-page-client-side-solution",
+    "id": "1a2c4370-f999-4137-a921-25a9bd5dcd1d",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "ReferralPage description"
+      },
+      "longDescription": {
+        "default": "ReferralPage description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "referral-page Feature",
+        "description": "The feature that activates elements of the referral-page solution.",
+        "id": "d3ca03a8-3d0e-412a-895f-f6eeade4c181",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/referral-page.sppkg"
+  }
+}
