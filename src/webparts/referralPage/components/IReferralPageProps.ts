@@ -6,4 +6,5 @@ export interface IReferralPageProps {
   userDisplayName: string;
   context:any;
   StudentReferalId:any;
+   FeeStructureListId:any
 }

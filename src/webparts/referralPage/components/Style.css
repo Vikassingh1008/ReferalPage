@@ -1,61 +1,64 @@
 .bg{
-    background-color: #066767;
+  background-color: #066767;
 }
 *{
-  margin: 0px;
-  padding: 0px;
-  box-sizing: border-box;
-  
+margin: 0px;
+padding: 0px;
+box-sizing: border-box;
+
 }
 #workbenchPageContent {
-    max-width: 100%;
-    width: 100%;
-  }
+  max-width: 100%;
+  width: 100%;
+}
 /* tr{
-  border: 1px solid black;
+border: 1px solid black;
 } */
 .space{
-  margin-top: 10px;
-  margin-left: 75%;
-  margin-right: 30px;
-  
+margin-top: 2px;
+margin-left: 75%;
+margin-right: 30px;
+
 }
 #spPageCanvasContent [data-automation-id="CanvasZone"], #spPageCanvasContent [data-automation-id="CanvasSection"], #spPageCanvasContent [data-automation-id="CanvasZone-SectionContainer"]{
-  max-width: 1320px !important;
- padding: 0 !important;
- margin: 0 auto !important;
+max-width: 2400px !important;
+width: 100%;
+padding: 0 !important;
+margin: 0 auto !important;
 }
-
+.CanvasComponent.LCS .CanvasZone {
+  max-width: 100%;
+}
 /* .swal2-custom-popup{
-  width: 350px;
-  height: 300px;
+width: 350px;
+height: 300px;
 } */
 .swal2-shown.swal2-height-auto {
-  height: 100% !important;
+height: 100% !important;
 }
 .sidebar a {
-  display: block;
-  color: white;
-  padding: 16px;
-  text-decoration: none;
+display: block;
+color: white;
+padding: 16px;
+text-decoration: none;
 }
- 
+
 
 
 .sidebar a:hover {
-  background-color: #fffafa;
-  color: rgb(7, 6, 6);
+background-color: #fffafa;
+color: rgb(7, 6, 6);
 }
 .table-container{
-  margin-left: -5px !important;
-  margin-right: 6px !important;
-  height: 425px;
-  overflow-y: auto;
-  margin-bottom: 6px !important;
+margin-left: -5px !important;
+margin-right: 6px !important;
+height: 100vh;
+overflow-y: auto;
+margin-bottom: 6px !important;
 
 }
 
 th,td{
-  text-align: center;
+text-align: center;
 }
 

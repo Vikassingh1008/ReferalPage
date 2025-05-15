@@ -15,6 +15,7 @@ import { IReferralPageProps } from './components/IReferralPageProps';
 export interface IReferralPageWebPartProps {
   description: string;
   StudentReferalId:any;
+   FeeStructureListId:any;
 }
 
 export default class ReferralPageWebPart extends BaseClientSideWebPart<IReferralPageWebPartProps> {
@@ -33,6 +34,7 @@ export default class ReferralPageWebPart extends BaseClientSideWebPart<IReferral
         userDisplayName: this.context.pageContext.user.displayName,
         context:this.context,
         StudentReferalId:this.properties.StudentReferalId,
+         FeeStructureListId:this.properties.FeeStructureListId,
       }
     );
 
@@ -116,6 +118,9 @@ export default class ReferralPageWebPart extends BaseClientSideWebPart<IReferral
                 }),
                 PropertyPaneTextField('StudentReferalId',{
                   label:'StudentReferalId'
+                }),
+                 PropertyPaneTextField('FeeStructureListId',{
+                  label:'FeeStructureListId'
                 })
               ]
             }

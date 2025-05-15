@@ -5,6 +5,11 @@ import { FaHome } from "react-icons/fa";
 
 const Sidenavbar = () => {
   const [sidenavopen, setSidenavopen] = React.useState(true);
+  const currentUrl = window.location.href;
+  const match = currentUrl.match(/sites\/([^/]+)/);
+  const siteName = match ? match[1] : "IITIQ"; // fallback to iitiq
+
+  const baseUrl = `https://smalsusinfolabs.sharepoint.com/sites/${siteName}/SitePages`;
   return (
     <>
       {sidenavopen ? (
@@ -13,7 +18,7 @@ const Sidenavbar = () => {
           style={{
             backgroundColor: "#103e3e",
             fontSize: "18px",
-            width: "130%",
+            width: "170px",
             // marginLeft: "-12px",
             // marginTop: "-56px",
             marginBottom: "10px",
@@ -31,7 +36,33 @@ const Sidenavbar = () => {
               zIndex: "1",
             }}
           />
+
           <a
+            href={`${baseUrl}/Admin-Dashboard.aspx`}
+            target="_blank"
+            data-interception="off"
+          >
+            Home <FaHome style={{ marginTop: "-5px" }} />
+          </a>
+
+          <a href={`${baseUrl}/Students-Referral.aspx`}>Referral</a>
+
+          <a
+            href={`${baseUrl}/Staff-Members.aspx`}
+            target="_blank"
+            data-interception="off"
+          >
+            Staff Dashboard
+          </a>
+
+          <a
+            href={`${baseUrl}/MyDashboard.aspx`}
+            target="_blank"
+            data-interception="off"
+          >
+            My Dashboard
+          </a>
+          {/* <a
             href="https://smalsusinfolabs.sharepoint.com/sites/IITIQ/SitePages/Admin-Dashboard.aspx"
             target="_blank"
             data-interception="off"
@@ -54,7 +85,7 @@ const Sidenavbar = () => {
             data-interception="off"
           >
             My Dashboard
-          </a>
+          </a> */}
         </div>
       ) : (
         <div
@@ -62,7 +93,7 @@ const Sidenavbar = () => {
             backgroundColor: "#103e3e",
             fontSize: "30px",
             textAlign: "center",
-            width: "150%",
+            width: "50px",
             // height: "15%",
             // marginLeft: "-12px",
             // marginTop: "-56px",

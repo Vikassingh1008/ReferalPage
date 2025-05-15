@@ -24,6 +24,11 @@ const Tenstack = (props: any) => {
 
   const testurl = props?.props?.context?._pageContext?.web?.absoluteUrl;
   const teststudentid = props?.props?.StudentReferalId;
+    const testidfeeStructure = props?.props?.FeeStructureListId;
+
+  const currentUrl = window.location.href;
+  const match = currentUrl.match(/sites\/([^/]+)/);
+  const siteName = match ? match[1] : "IITIQ"; // fallback to iitiq
 
   const [data, setData] = React.useState<any[]>([]);
   const [globalFilter, setGlobalFilter] = React.useState<string>("");
@@ -40,16 +45,47 @@ const Tenstack = (props: any) => {
     Status: "",
     Response: "",
     Author: "",
+    Source: "",
+    Course: "",
+    Comments: "",
   });
 
+  // const [comment,setComment]=React.useState([{
+  //   CurrDate:"",
+  //   Msg:""
+  // }])
+
   const [editindex, setEditindex] = React.useState(null);
-  const [selectedStatus, setSelectedStatus] = React.useState("New");
+  const [selectedStatus, setSelectedStatus] = React.useState("");
 
   const [createdtitle, setCreatedtitle] = React.useState();
   const [createdtitletime, setCreatedtitletime] = React.useState();
 
   const [modifiedtitle, setModifiedtitle] = React.useState();
   const [modifiedtitletime, setModifiedtitletime] = React.useState();
+
+  const [comments, setComments] = React.useState<any[]>([]);
+  const [newComment, setNewComment] = React.useState("");
+
+  const [phoneError, setPhoneError] = React.useState("");
+
+  const [editCommentIndex, setEditCommentIndex] = React.useState<number | null>(
+    null
+  );
+  const [editedCommentText, setEditedCommentText] = React.useState<string>("");
+
+  // const [courseOptions, setCourseOptions] = React.useState<string[]>([]);
+
+  const [feesturcture, setFeestructure] = React.useState<any[]>([]);
+
+  const handleSaveEditedComment = (index: number) => {
+    const updatedComments = [...comments];
+    updatedComments[index].Msg = editedCommentText;
+    updatedComments[index].Time = new Date().toLocaleString(); // update timestamp
+    setComments(updatedComments);
+    setEditCommentIndex(null);
+    setEditedCommentText("");
+  };
 
   const fetchApidata = async () => {
     try {
@@ -59,7 +95,17 @@ const Tenstack = (props: any) => {
         .items.select("*,Author/Title,Editor/Title")
         .expand("Author,Editor")
         .getAll();
-      setData(res);
+
+      const processedData = res.map((item: any) => ({
+        ...item,
+        Comments: JSON.parse(item.Comments),
+      }));
+      setData(processedData);
+
+      // const uniqueCourses = Array.from(
+      //   new Set(processedData.map((item) => item.Course).filter(Boolean))
+      // );
+      // setCourseOptions(uniqueCourses);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -70,6 +116,46 @@ const Tenstack = (props: any) => {
   }, []);
 
   console.log("total data", data);
+
+
+
+  ///////////////////fee structure
+
+   const fetchApidata4 = async () => {
+    try {
+      const web = new Web(testurl);
+      const res = await web.lists
+        .getById(testidfeeStructure)
+        .items.select("*,Subjects/Id,Subjects/Title")
+        .expand("Subjects")
+        .getAll();
+      setFeestructure(res);
+     
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchApidata4();
+  }, []);
+
+  const handlePost = () => {
+    if (newComment.trim() === "") return; // Prevent empty comments
+
+    const newEntry = {
+      Msg: newComment,
+      Time: new Date().toLocaleString(),
+    };
+
+    setComments([...comments, newEntry]);
+    setNewComment(""); // Clear input for next comment
+  };
+
+  const handleDeleteComment = (index: number) => {
+    const updatedComments = comments.filter((_, i) => i !== index);
+    setComments(updatedComments);
+  };
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedStatus(e.target.value);
@@ -82,27 +168,29 @@ const Tenstack = (props: any) => {
 
   const columns = [
     {
-      header: "Title",
+      header: "Name",
       accessorKey: "Title",
     },
     {
-      header: "Phone No",
+      header: "Course",
+      accessorKey: "Course",
+    },
+    {
+      header: "Number",
       accessorKey: "PhoneNumber",
       accessorFn: (row: any) =>
         String(row.PhoneNumber != null ? row.PhoneNumber : ""),
     },
+    // {
+    //   header: "Email",
+    //   accessorKey: "Email",
+    //   accessorFn: (row: any) => String(row.Email != null ? row.Email : ""),
+    // },
     {
-      header: "Email",
-      accessorKey: "Email",
-      accessorFn: (row: any) => String(row.Email != null ? row.Email : ""),
-    },
-    {
-      header: "Call Appoint",
+      header: "Call ",
       accessorKey: "CallSchedule",
       accessorFn: (row: any) =>
-        row.CallSchedule
-          ? moment(row.CallSchedule).format("DD/MM/YYYY hh:mm:ss A")
-          : "",
+        row.CallSchedule ? moment(row.CallSchedule).format("DD/MM/YYYY") : "",
 
       // cell: (info: any) => {
       //   const rawDate = info.getValue();
@@ -111,10 +199,7 @@ const Tenstack = (props: any) => {
       //     : "N/A";
       // },
     },
-    {
-      header: "Reffered by",
-      accessorKey: "Author.Title",
-    },
+
     {
       header: () => (
         <select
@@ -126,27 +211,84 @@ const Tenstack = (props: any) => {
           <option value="">Select Status</option>
           <option value="New">New</option>
           <option value="Joined">Joined</option>
-          <option value="Connected">Connected</option>
-          <option value="Not-Interested">Not Interested</option>
+          {siteName === "TSO" ? (
+            <option value="Interview-Schedule">Interview-Schedule</option>
+          ) : (
+            <option value="Connected">Connected</option>
+          )}
+          <option value="Not Interested">Not Interested</option>
           <option value="Follow-Up">Follow-Up</option>
         </select>
       ),
       accessorKey: "Status",
     },
+
     {
-      header: "Response",
-      accessorKey: "Response",
+  header: "Latest Comments ",
+  accessorFn: (row: any) => {
+    const response = row.Response || "";
+    const comments = row.Comments;
+    
+    if (Array.isArray(comments) && comments.length > 0) {
+      const latestComment = comments[comments.length - 1]?.Msg || "";
+      return latestComment;
+    }
+
+    return response;
+  },
+},
+
+
+//     {
+//   header: "Response / Latest Comment",
+//   accessorFn: (row: any) => {
+//     const response = row.Response || "";
+//     const comments = row.Comments;
+//     let latestComment = "";
+
+//     if (Array.isArray(comments) && comments.length > 0) {
+//       latestComment = comments[comments.length - 1]?.Msg || "";
+//     }
+
+//     // Merge both response and latest comment
+//     return `${response}${response && latestComment ? " | " : ""}${latestComment}`;
+//   },
+// },
+
+    // {
+    //   header: "Response",
+    //   accessorKey: "Response",
+    // },
+//     {
+//   header: "Latest Comment",
+//   accessorKey: "Comments",
+//   accessorFn: (row: any) => {
+//     const comments = row.Comments;
+//     if (Array.isArray(comments) && comments.length > 0) {
+//       return comments[comments.length - 1].Msg; // latest comment
+//     }
+//     return "";
+//   },
+// },
+
+    {
+      header: "Source",
+      accessorKey: "Source",
     },
     {
-      header: "Created",
-      accessorKey: "Created",
-      accessorFn: (row: any) =>
-        row.Created ? moment(row.Created).format("DD/MM/YYYY") : "",
-      // cell: (info: any) => {
-      //   const CDate = info.getValue();
-      //   return CDate ? moment(CDate).format("DD/MM/YYYY ") : "N/A";
-      // },
+      header: "Reffered by",
+      accessorKey: "Author.Title",
     },
+    // {
+    //   header: "Created",
+    //   accessorKey: "Created",
+    //   accessorFn: (row: any) =>
+    //     row.Created ? moment(row.Created).format("DD/MM/YYYY") : "",
+    //   // cell: (info: any) => {
+    //   //   const CDate = info.getValue();
+    //   //   return CDate ? moment(CDate).format("DD/MM/YYYY ") : "N/A";
+    //   // },
+    // },
 
     {
       header: "Actions",
@@ -243,17 +385,25 @@ const Tenstack = (props: any) => {
       Status: "",
       Response: "",
       Author: "",
+      Course: "",
+      Source: "",
+      Comments: "",
     });
     setIsopenmodal(false);
     setEditindex(null);
+    setComments([]);
+    setNewComment("");
   };
 
   const handleChange = (e: any) => {
     const { name, value } = e.target;
+
     setFormdata((prevdata) => ({
       ...prevdata,
       [name]: value,
     }));
+
+    setPhoneError("");
   };
 
   const handleedit = (item: any) => {
@@ -265,12 +415,21 @@ const Tenstack = (props: any) => {
       PhoneNumber: selecteditem?.PhoneNumber || "",
       CallSchedule:
         selecteditem?.CallSchedule !== null
-          ? moment(selecteditem?.CallSchedule).format("YYYY-MM-DD hh:mm:ss A")
+          ? moment(selecteditem?.CallSchedule).format("YYYY-MM-DD")
           : "",
       Status: selecteditem?.Status || "",
       Response: selecteditem?.Response || "",
-      Author: selecteditem.Author.Title || "",
+      Author: selecteditem?.Author?.Title || "",
+      Course: selecteditem?.Course || "",
+      Source: selecteditem?.Source || "",
+      Comments: selecteditem?.Comments || "",
     });
+
+    if (item.Comments && Array.isArray(item.Comments)) {
+      setComments(item.Comments);
+    } else {
+      setComments([]); // Set to empty array if no comments exist
+    }
     setCreatedtitle(selecteditem.Author.Title);
     setCreatedtitletime(selecteditem.Created);
 
@@ -284,6 +443,20 @@ const Tenstack = (props: any) => {
 
     try {
       let web = new Web(testurl);
+
+      if (editindex === null) {
+        // Query the list for items with the same PhoneNumber
+        const existingItems = await web.lists
+          .getById(teststudentid)
+          .items.filter(`PhoneNumber eq '${formdata.PhoneNumber}'`)
+          .get();
+
+        if (existingItems.length > 0) {
+          setPhoneError("Phone number already exists!");
+          return; // Do not proceed with saving
+        }
+      }
+
       if (editindex !== null) {
         await web.lists
           .getById(teststudentid)
@@ -292,6 +465,9 @@ const Tenstack = (props: any) => {
             CallSchedule: formdata?.CallSchedule || null,
             Status: formdata?.Status || "",
             Response: formdata?.Response || null,
+            Course: formdata?.Course || "",
+            Source: formdata?.Source || "",
+            Comments: JSON.stringify(comments) || "",
           })
           .then((res) => {
             setIsopenmodal(false);
@@ -304,6 +480,9 @@ const Tenstack = (props: any) => {
               Status: "",
               Response: "",
               Author: "",
+              Course: "",
+              Source: "",
+              Comments: "",
             });
             Swal.fire({
               title: "Success!",
@@ -322,10 +501,14 @@ const Tenstack = (props: any) => {
             CallSchedule: formdata?.CallSchedule || null,
             Status: formdata?.Status || "",
             Response: formdata?.Response || null,
+            Course: formdata?.Course || null,
+            Source: formdata?.Source || "",
+            Comments: JSON.stringify(comments) || "",
           })
           .then((res) => {
             setIsopenmodal(false);
             setEditindex(null);
+            setComments([]);
             setFormdata({
               Title: "",
               Email: "",
@@ -334,6 +517,9 @@ const Tenstack = (props: any) => {
               Status: "",
               Response: "",
               Author: "",
+              Course: "",
+              Source: "",
+              Comments: "",
             });
             Swal.fire({
               title: "Success!",
@@ -414,7 +600,7 @@ const Tenstack = (props: any) => {
   // );
   const onRenderFooterContent = React.useCallback(
     () => (
-      <div>
+      <div >
         {editindex == null ? (
           <div className="text-end">
             <button
@@ -509,12 +695,12 @@ const Tenstack = (props: any) => {
   return (
     <>
       <div className="bg">
-        <div className="d-flex gap-5">
+        <div className="d-flex gap-3">
           <div>
             <Sidenavbar />
           </div>
-          <div>
-            <h1 className="text-center  pt-3 text-light">Referral Page</h1>
+          <div className="w-100">
+            <h1 className="text-center  pt-1 text-light">Referral Page</h1>
             <div className="space">
               <input
                 type="text"
@@ -525,22 +711,25 @@ const Tenstack = (props: any) => {
               />
             </div>
             <div className="m-1 bg-light table-container">
-              <div className="p-3 d-flex justify-content-end">
+              <div className="p-1 d-flex justify-content-between">
+                <div className="mt-2 ps-1">
+                  Showing {filteredData.length} of total {data.length}
+                </div>
                 <button className="btn btn-primary" onClick={openModal}>
                   Add Student
                 </button>
               </div>
               <table className="table table-striped table-bordered table-hover bg-light ">
-                <colgroup>
+                {/* <colgroup>
                   <col />
+                  <col  />
+                  <col  style={{ width: "100px" }} />
+                  <col style={{ width: "100px" }} />
                   <col style={{ width: "100px" }} />
                   <col />
-                  <col style={{ width: "120px" }} />
-                  <col />
-                  <col style={{ width: "90px" }} />
-                  <col />
+                  <col style={{ width: "100px" }}/>
                   <col style={{ width: "100px" }} />
-                </colgroup>
+                </colgroup> */}
                 <thead>
                   {tabledata.getHeaderGroups().map((headerGroup) => (
                     <tr key={headerGroup.id}>
@@ -684,7 +873,7 @@ const Tenstack = (props: any) => {
                       <div className="row">
                         <div className="col-lg-6">
                           <div className="form-group m-2">
-                            <label>Title</label>
+                            <label>Name</label>
                             <input
                               type="text"
                               className="form-control mt-2"
@@ -720,6 +909,11 @@ const Tenstack = (props: any) => {
                               autoComplete="off"
                               maxLength={10}
                             />
+                            {phoneError && (
+                              <small style={{ color: "red" }}>
+                                {phoneError}
+                              </small>
+                            )}
                           </div>
                         </div>
 
@@ -739,11 +933,82 @@ const Tenstack = (props: any) => {
                           </div>
                         </div>
 
-                        <div className="col-lg-12">
+                        <div className="col-lg-6">
+                          <div className="form-group m-2">
+                            <label>Course</label>
+                            {/* <input
+                              type="text"
+                              className="form-control mt-2"
+                              name="Course"
+                              value={formdata?.Course}
+                              onChange={handleChange}
+                              autoComplete="off"
+                            /> */}
+
+                            <select
+                              className="form-select mt-2"
+                              name="Course"
+                              value={formdata?.Course}
+                              onChange={handleChange}
+                            >
+                              <option value="">Select Course</option>
+                              {feesturcture.map((el) => (
+                                <option key={el} value={el.Title}>
+                                  {el.Title}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="col-lg-6">
+                          <div className="form-group m-2 ">
+                            <label>Sources</label>
+
+                            <select
+                              className="form-select  mt-2"
+                              name="Source"
+                              value={formdata.Source} // Current selected stream
+                              onChange={handleChange} // Handle change event
+                            >
+                              <option value="" disabled>
+                                Select a Source
+                              </option>
+                              <option value="Sales">Sales</option>
+                              <option value="Basu">Basu</option>
+                              <option value="JD">JD</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* <div className="col-lg-12">
                           <div className="form-group m-2">
                             <label>Response</label>
                             <textarea
                               rows={4}
+                              className="form-control mt-2"
+                              name="Msg"
+                              value={comment[0].Msg}
+                              onChange={handleChange}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div> */}
+
+                        {/* <button
+                type="submit"
+                onClick={handlecomment}
+                className="btn btn-primary m-3"
+              >
+                post
+
+              </button> */}
+
+                        {/* <div className="col-lg-12">
+                          <div className="form-group m-2">
+                            <label>Response</label>
+                            <textarea
+                              rows={2}
                               className="form-control mt-2"
                               name="Response"
                               value={formdata?.Response}
@@ -751,6 +1016,41 @@ const Tenstack = (props: any) => {
                               autoComplete="off"
                             />
                           </div>
+                        </div> */}
+
+                        <div className=" col-lg-12">
+                          <label htmlFor="">Comments</label>
+
+                          {comments.map((comment: any) => (
+                            <div
+                              key={comment.id}
+                              className="mb-2 p-2 bg-white border rounded"
+                            >
+                              <p>{comment.Msg}</p>
+                              <span className="text-xs text-gray-500">
+                                {comment.Time}
+                              </span>
+                            </div>
+                          ))}
+
+                          <div className="form-group m-2">
+                            <textarea
+                              rows={3}
+                              className="form-control mt-2 w-full p-2 border rounded"
+                              placeholder="Write a comment..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              autoComplete="off"
+                            ></textarea>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handlePost}
+                            className="btn btn-success m-3"
+                          >
+                            Post
+                          </button>
                         </div>
 
                         <div className="col-lg-12">
@@ -768,17 +1068,35 @@ const Tenstack = (props: any) => {
                                 />
                                 <span>New</span>
                               </label>
-                              <label>
-                                <input
-                                  type="radio"
-                                  name="Status"
-                                  value="Connected"
-                                  className="mx-2"
-                                  checked={formdata?.Status === "Connected"}
-                                  onChange={handleChange}
-                                />
-                                <span>Connected</span>
-                              </label>
+
+                              {siteName === "TSO" ? (
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name="Status"
+                                    value="Interview-Schedule"
+                                    className="mx-2"
+                                    checked={
+                                      formdata?.Status === "Interview-Schedule"
+                                    }
+                                    onChange={handleChange}
+                                  />
+                                  <span>Interview-Schedule</span>
+                                </label>
+                              ) : (
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name="Status"
+                                    value="Connected"
+                                    className="mx-2"
+                                    checked={formdata?.Status === "Connected"}
+                                    onChange={handleChange}
+                                  />
+                                  <span>Connected</span>
+                                </label>
+                              )}
+
                               <label>
                                 <input
                                   type="radio"
@@ -846,7 +1164,7 @@ const Tenstack = (props: any) => {
                       <div className="row">
                         <div className="col-lg-6">
                           <div className="form-group m-2">
-                            <label>Title</label>
+                            <label>Name</label>
                             <input
                               type="text"
                               className="form-control mt-2"
@@ -903,6 +1221,41 @@ const Tenstack = (props: any) => {
 
                         <div className="col-lg-6">
                           <div className="form-group m-2">
+                            <label>Course</label>
+                            <input
+                              type="text"
+                              className="form-control mt-2"
+                              name="Course"
+                              value={formdata?.Course}
+                              onChange={handleChange}
+                              autoComplete="off"
+                              disabled
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-lg-6">
+                          <div className="form-group m-2 ">
+                            <label>Sources</label>
+
+                            <select
+                              className="form-select  mt-2"
+                              name="Source"
+                              value={formdata.Source} // Current selected stream
+                              onChange={handleChange} // Handle change event
+                            >
+                              <option value="" disabled>
+                                Select a Source
+                              </option>
+                              <option value="Sales">Sales</option>
+                              <option value="Basu">Basu</option>
+                              <option value="JD">JD</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="col-lg-6">
+                          <div className="form-group m-2">
                             <label>Call Schedule</label>
                             <input
                               type="date"
@@ -917,11 +1270,11 @@ const Tenstack = (props: any) => {
                           </div>
                         </div>
 
-                        <div className="col-lg-12">
+                        {/* <div className="col-lg-12">
                           <div className="form-group m-2">
                             <label>Response</label>
                             <textarea
-                              rows={4}
+                              rows={2}
                               className="form-control mt-2"
                               name="Response"
                               value={formdata?.Response}
@@ -929,8 +1282,133 @@ const Tenstack = (props: any) => {
                               autoComplete="off"
                             />
                           </div>
+                        </div> */}
+
+                        {/* <div className="mt-4">
+                        <label htmlFor="">Comments</label>
+
+                          {comments.length === 0 ? (
+                            <p className="text-gray-500">No comments yet.</p>
+                          ) : (
+                            comments.map((comment: any, index) => (
+                              <div
+                                key={index}
+                                className="mb-2 p-2 bg-white border rounded"
+                              >
+                                <p>{comment.Msg}</p>
+                                <span className="text-xs text-gray-500">
+                                  {comment.Time}
+                                </span>
+                              </div>
+                            ))
+                          )}
+                        </div> */}
+
+                        <div className=" col-lg-12">
+                          <label htmlFor="">Comments</label>
+
+                          <div className="form-group m-2">
+                            <textarea
+                              rows={3}
+                              className="form-control mt-2 w-full p-2 border rounded"
+                              placeholder="Write a comment..."
+                              value={newComment}
+                              onChange={(e) => setNewComment(e.target.value)}
+                              autoComplete="off"
+                            ></textarea>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handlePost}
+                            className="btn btn-success m-3"
+                          >
+                            Post
+                          </button>
                         </div>
 
+                        <div className="mt-4">
+                          {comments.length === 0 ? (
+                            <p className="text-gray-500">No comments yet.</p>
+                          ) : (
+                            comments.map((comment: any, index: number) => (
+                              <div
+                                key={index}
+                                className="mb-2 p-2 bg-white border rounded"
+                              >
+                                {editCommentIndex === index ? (
+                                  <>
+                                    <textarea
+                                      className="form-control mb-2"
+                                      value={editedCommentText}
+                                      onChange={(e) =>
+                                        setEditedCommentText(e.target.value)
+                                      }
+                                    />
+                                    <div className="flex">
+                                      <button
+                                        className="btn btn-sm btn-success me-2"
+                                        onClick={() =>
+                                          handleSaveEditedComment(index)
+                                        }
+                                      >
+                                        Post
+                                      </button>
+                                      <button
+                                        className="btn btn-sm btn-secondary"
+                                        onClick={() =>
+                                          setEditCommentIndex(null)
+                                        }
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p>{comment.Msg}</p>
+                                    <span className="text-xs text-gray-500 d-block">
+                                      {comment.Time}
+                                    </span>
+                                    <FaRegEdit
+                                      style={{
+                                        color: "green",
+                                        fontSize: "17px",
+                                      }}
+                                      onClick={() => {
+                                        setEditCommentIndex(index);
+                                        setEditedCommentText(comment.Msg);
+                                      }}
+                                    />
+                                    {/* <button
+                                      className="btn btn-sm btn-outline-primary mt-1"
+                                      onClick={() => {
+                                        setEditCommentIndex(index);
+                                        setEditedCommentText(comment.Msg);
+                                      }}
+                                    >
+                                      Edit
+                                    </button> */}
+                                    <MdDelete
+                                      style={{
+                                        color: "red",
+                                        fontSize: "17px",
+                                        marginLeft: "10px",
+                                      }}
+                                      onClick={() => handleDeleteComment(index)}
+                                    />
+                                    {/* <button
+                                      className="btn btn-sm btn-outline-danger"
+                                      onClick={() => handleDeleteComment(index)}
+                                    >
+                                      Delete
+                                    </button> */}
+                                  </>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
                         <div className="col-lg-12">
                           <div className="form-group m-2">
                             <label>Status</label>
@@ -946,17 +1424,33 @@ const Tenstack = (props: any) => {
                                 />
                                 <span>New</span>
                               </label>
-                              <label>
-                                <input
-                                  type="radio"
-                                  name="Status"
-                                  value="Connected"
-                                  className="mx-2"
-                                  checked={formdata?.Status === "Connected"}
-                                  onChange={handleChange}
-                                />
-                                <span>Connected</span>
-                              </label>
+                              {siteName === "TSO" ? (
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name="Status"
+                                    value="Interview-Schedule"
+                                    className="mx-2"
+                                    checked={
+                                      formdata?.Status === "Interview-Schedule"
+                                    }
+                                    onChange={handleChange}
+                                  />
+                                  <span>Interview-Schedule</span>
+                                </label>
+                              ) : (
+                                <label>
+                                  <input
+                                    type="radio"
+                                    name="Status"
+                                    value="Connected"
+                                    className="mx-2"
+                                    checked={formdata?.Status === "Connected"}
+                                    onChange={handleChange}
+                                  />
+                                  <span>Connected</span>
+                                </label>
+                              )}
                               <label>
                                 <input
                                   type="radio"
